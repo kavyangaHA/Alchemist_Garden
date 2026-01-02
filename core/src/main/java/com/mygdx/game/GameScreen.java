@@ -77,6 +77,7 @@ public class GameScreen implements Screen {
             //If the tile is not occupied,plant a new one
             //for now always the plan is created at player's x,y coordinators
             if(!tileOccupied){
+                //using the factory method
                 Plant newPlant = PlantFactory.createPlant("Vine",player.x, player.y);
                 if (newPlant !=null){
                     plants.add(newPlant);
