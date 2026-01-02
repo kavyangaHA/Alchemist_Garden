@@ -14,6 +14,9 @@ public class PlantFactory {
                 //In future,we can add more plants(cases)
                 //ex- case "Bomb" this will give us bombPlant(x,y);
 
+            case "Bomb":
+                return new BombPlant(x,y);
+
             default:
                 //if unknown type is requested we return null
                 // To avoid crashes
