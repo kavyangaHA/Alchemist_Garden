@@ -1,6 +1,6 @@
 package com.mygdx.game;
 
-//using factory method
+//using Simple Factory
 public class PlantFactory {
     //This is our "Factory Method".It is static,so we can call it
     //directly from the class without needing to create a factory object.
