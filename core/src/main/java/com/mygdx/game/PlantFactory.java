@@ -17,6 +17,9 @@ public class PlantFactory {
             case "Bomb":
                 return new BombPlant(x,y);
 
+            case "SunKissedVine":
+                return new SunKissedVinePlant(x,y);
+
             default:
                 //if unknown type is requested we return null
                 // To avoid crashes
