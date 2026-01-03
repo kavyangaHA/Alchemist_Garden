@@ -28,6 +28,10 @@ public class GameScreen implements Screen {
     private ArrayList<Plant>plants;
     private ArrayList<CrackedWall>walls;
     private static final int BOMB_KEY = Input.Keys.B;
+    private ArrayList<String>inventorySeeds;
+    private ArrayList<String>inventoryEssences;
+    private ArrayList<Essence> essencesInWorld;
+    private static final int COMBINE_KEY = Input.Keys.C;
 
     @Override
     public void show() {
@@ -52,6 +56,19 @@ public class GameScreen implements Screen {
         walls.add(new CrackedWall(6,5));
         walls.add(new CrackedWall(7,5));
         walls.add(new CrackedWall(10,5));
+
+
+        inventorySeeds = new ArrayList<>();
+        inventoryEssences = new ArrayList<>();
+        essencesInWorld = new ArrayList<>();
+
+        //Give the player a starting seed
+        inventorySeeds.add("Vine");
+        inventorySeeds.add("Bomb");
+
+        //PLace a Sun Essence in the world
+        essencesInWorld.add(new Essence(15,10,"SunEssence"));
+
     }
 
     @Override
@@ -93,13 +110,25 @@ public class GameScreen implements Screen {
 //            }
 //        }
 
+        //Combine items with 'C'
+        if (Gdx.input.isKeyJustPressed(COMBINE_KEY)){
+            Grimoire.combine(inventorySeeds,inventoryEssences);
+        }
+/// /*******
 //plant a Vine with "P"
         if(Gdx.input.isKeyJustPressed(Input.Keys.P)){
-            if(!isTileOccupied(player.x, player.y)){
-                plants.add(PlantFactory.createPlant("Vine",player.x, player.y));
+            if(!isTileOccupied(player.x, player.y) && !inventorySeeds.isEmpty()){
+                //plants.add(PlantFactory.createPlant("Vine",player.x, player.y));
+                String seedToPlant = inventorySeeds.get(0);
+                Plant newPlant = PlantFactory.createPlant(seedToPlant,player.x,player.y);
+                if (newPlant != null){
+                    plants.add(newPlant);
+                    //inventorySeeds.remove(0);//optional
+
+                }
             }
         }
-
+/// *************
         if(Gdx.input.isKeyJustPressed(BOMB_KEY)){
             if(!isTileOccupied(player.x, player.y)){
                 plants.add(PlantFactory.createPlant("Bomb", player.x, player.y));
@@ -127,7 +156,17 @@ public class GameScreen implements Screen {
         }
         //remove all plants that exploded
         plants.removeAll(plantsToRemove);
+//pick up logicc
+        //check for esssense pickups
 
+        for(int i = essencesInWorld.size()-1;i>=0;i--){
+            Essence essence = essencesInWorld.get(i);
+            if(essence.x == player.x && essence.y == player.y){
+                inventoryEssences.add(essence.type);
+                essencesInWorld.remove(i);
+                System.out.println("Pick up a "+essence.type+"!");
+            }
+        }
 
         // --- RENDERING ---
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
@@ -149,10 +188,24 @@ public class GameScreen implements Screen {
             batch.draw(whitePixel,wall.x*TILE_SIZE,wall.y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
         }
 
+        //Draw Essence in the world
+        batch.setColor(1,1,0,0.7f);//glowing yellow
+        for(Essence essence:essencesInWorld){
+            //drawing it a bit smaller and centered
+            int offset = TILE_SIZE/4;
+            batch.draw(whitePixel,essence.x*TILE_SIZE+offset,essence.y*TILE_SIZE+offset,TILE_SIZE/2,TILE_SIZE/2);
+        }
+
         for(Plant plant : plants){
             if (plant instanceof BombPlant){
                 batch.setColor(0.8f,0.1f,0.1f,1);
             }
+            else if (plant instanceof SunKissedVinePlant){
+                batch.setColor(1,0.9f,0.2f,1);//Golden yellow
+                batch.draw(whitePixel,plant.x*TILE_SIZE,plant.y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
+
+            }
+
             else if(plant.isMature()){
                 //let's draw a mature vine as a larger,bright green square
                 batch.setColor(0.1f,0.8f,0.2f,1);
