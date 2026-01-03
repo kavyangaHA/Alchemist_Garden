@@ -25,6 +25,11 @@ public class GameScreen implements Screen {
 
     private Texture whitePixel;
     private Player player; // We added a Player object!
+    private Texture tileTexture;
+    private Texture characterTexture;
+    private Texture objectTexture;
+    private Texture sunEssencesTexture;
+
     private ArrayList<Plant>plants;
     private ArrayList<CrackedWall>walls;
     private static final int BOMB_KEY = Input.Keys.B;
@@ -46,6 +51,11 @@ public class GameScreen implements Screen {
         pixmap.fill();
         whitePixel = new Texture(pixmap);
         pixmap.dispose();
+
+        tileTexture = new Texture(Gdx.files.internal("img/grass_2.png"));
+        characterTexture = new Texture(Gdx.files.internal("img/Wizard_1Attack1.png"));
+        objectTexture = new Texture(Gdx.files.internal("img/sprBrick.gif"));//until find a wall img
+        sunEssencesTexture = new Texture(Gdx.files.internal("img/SunEssense.png"));
 
         // Initialize the player at the center of the grid
         player = new Player(GRID_WIDTH / 2, GRID_HEIGHT / 2);
@@ -175,62 +185,59 @@ public class GameScreen implements Screen {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // Draw the grid
+        //Draw the grid using grass tile
         for (int x = 0; x < GRID_WIDTH; x++) {
             for (int y = 0; y < GRID_HEIGHT; y++) {
-                batch.setColor(0.2f, 0.3f, 0.2f, 1); // Dark green
-                batch.draw(whitePixel, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                //batch.setColor(0.2f, 0.3f, 0.2f, 1); // Dark green
+                batch.draw(tileTexture,x*TILE_SIZE,y*TILE_SIZE);
             }
         }
-        //Draw the cracked walls
-        batch.setColor(0.5f,0.4f,0.3f,1);//Brownish color
+
+
+        //Draw the cracked walls using texture
+        //batch.setColor(0.5f,0.4f,0.3f,1);//Brownish color
         for(CrackedWall wall:walls){
-            batch.draw(whitePixel,wall.x*TILE_SIZE,wall.y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
+            batch.draw(objectTexture,wall.x*TILE_SIZE,wall.y*TILE_SIZE);
         }
 
         //Draw Essence in the world
-        batch.setColor(1,1,0,0.7f);//glowing yellow
+        //batch.setColor(1,1,0,0.7f);//glowing yellow
         for(Essence essence:essencesInWorld){
-            //drawing it a bit smaller and centered
-            int offset = TILE_SIZE/4;
-            batch.draw(whitePixel,essence.x*TILE_SIZE+offset,essence.y*TILE_SIZE+offset,TILE_SIZE/2,TILE_SIZE/2);
+            batch.draw(sunEssencesTexture,essence.x*TILE_SIZE,essence.y*TILE_SIZE);
         }
-
+        //draw plants,we will use colored rects for now,but we can change this later
         for(Plant plant : plants){
             if (plant instanceof BombPlant){
                 batch.setColor(0.8f,0.1f,0.1f,1);
+                batch.draw(whitePixel,plant.x*TILE_SIZE,plant.y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
+                batch.setColor(1,1,1,1);//reset color
             }
             else if (plant instanceof SunKissedVinePlant){
                 batch.setColor(1,0.9f,0.2f,1);//Golden yellow
                 batch.draw(whitePixel,plant.x*TILE_SIZE,plant.y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
-
+                batch.setColor(1,1,1,1);//reset color
             }
 
             else if(plant.isMature()){
                 //let's draw a mature vine as a larger,bright green square
                 batch.setColor(0.1f,0.8f,0.2f,1);
                 batch.draw( whitePixel,plant.x * TILE_SIZE, plant.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                batch.setColor(1,1,1,1);//reset color
             } else {
                 // Draw an immature plant as a small, brown square
                 batch.setColor(0.4f, 0.3f, 0.2f, 1);
                 // We can make it smaller by drawing it with an offset and a smaller size
                 int offset = TILE_SIZE / 4;
                 batch.draw(whitePixel,plant.x * TILE_SIZE + offset, plant.y * TILE_SIZE + offset, TILE_SIZE / 2, TILE_SIZE / 2);
+                batch.setColor(1,1,1,1);//reset color
             }
         }
 
 
-
+        //draw the player
+        batch.draw(characterTexture,player.x*TILE_SIZE,player.y*TILE_SIZE-16);
 
         // Draw the player
-        batch.setColor(1, 1, 0, 1); // A bright yellow color
-        batch.draw(
-            whitePixel,
-            player.x * TILE_SIZE,
-            player.y * TILE_SIZE,
-            TILE_SIZE,
-            TILE_SIZE
-        );
 
         batch.end();
     }
@@ -263,6 +270,11 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         whitePixel.dispose();
+        //Dispose of the new textures
+        tileTexture.dispose();
+        characterTexture.dispose();
+        objectTexture.dispose();
+        sunEssencesTexture.dispose();
         batch.dispose();
     }
 }
