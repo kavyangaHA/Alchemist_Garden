@@ -36,7 +36,14 @@ public class GameScreen implements Screen {
     private ArrayList<String>inventorySeeds;
     private ArrayList<String>inventoryEssences;
     private ArrayList<Essence> essencesInWorld;
+
     private static final int COMBINE_KEY = Input.Keys.C;
+    private HeartseedTree heartseedTree;
+    private ArrayList<Essence>heartEssenceInWorld;
+    private ArrayList<String>inventoryHeartEssences;
+    private enum GameState {PLAYING,WIN}
+    private GameState currentState = GameState.PLAYING;
+
 
     @Override
     public void show() {
@@ -71,6 +78,12 @@ public class GameScreen implements Screen {
         inventorySeeds = new ArrayList<>();
         inventoryEssences = new ArrayList<>();
         essencesInWorld = new ArrayList<>();
+        heartEssenceInWorld = new ArrayList<>();
+        inventoryHeartEssences = new ArrayList<>();
+
+        //place the Heartseed Tree in the center
+        heartseedTree = new HeartseedTree(GRID_WIDTH/2,GRID_HEIGHT/2);
+
 
         //Give the player a starting seed
         inventorySeeds.add("Vine");
@@ -79,6 +92,15 @@ public class GameScreen implements Screen {
         //PLace a Sun Essence in the world
         essencesInWorld.add(new Essence(15,10,"SunEssence"));
 
+        //Puzzle setup
+        //puzzel 1:A wall blocks a path to a heart Essence
+        walls.add(new CrackedWall(8,8));
+        walls.add(new CrackedWall(9,8));
+        heartEssenceInWorld.add(new Essence(10,8,"HeartEssence"));
+
+        //Puzzle 2;A gap blocks a path to another Heart Essence.
+        //(The player will need to create a bridge vine)
+        heartEssenceInWorld.add(new Essence(3,12,"HeartEssence"));
     }
 
     @Override
@@ -166,7 +188,7 @@ public class GameScreen implements Screen {
         }
         //remove all plants that exploded
         plants.removeAll(plantsToRemove);
-//pick up logicc
+//pick up logic
         //check for esssense pickups
 
         for(int i = essencesInWorld.size()-1;i>=0;i--){
@@ -178,12 +200,40 @@ public class GameScreen implements Screen {
             }
         }
 
+        // check for HeartEssence pickups
+        for(int i = heartEssenceInWorld.size()-1;i>=0;i--){
+            Essence essence =heartEssenceInWorld.get(i);
+            if(essence.x==player.x && essence.y==player.y){
+                inventoryHeartEssences.add(essence.type);
+                heartEssenceInWorld.remove(i);
+                System.out.println("You found a "+essence.type+"!");
+            }
+        }
+
+        //check for the win condition
+        //check if the player is on the tree's tile and has collected all essences
+        if(player.x==heartseedTree.x && player.y == heartseedTree.y && inventoryHeartEssences.size() ==2){
+            if(currentState == GameState.PLAYING){
+                System.out.println("The Heartseed Tree has been restored!");
+                heartseedTree.bloom();
+                currentState = GameState.WIN;
+            }
+        }
+
+
+
+
+
+
+
         // --- RENDERING ---
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
+
+
 
         //Draw the grid using grass tile
         for (int x = 0; x < GRID_WIDTH; x++) {
