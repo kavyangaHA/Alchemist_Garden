@@ -103,94 +103,46 @@ public class GameScreen implements Screen {
         heartEssenceInWorld.add(new Essence(3,12,"HeartEssence"));
     }
 
+
+
     @Override
     public void render(float delta) {
         // --- INPUT HANDLING ---
-        // We check for keys being pressed just once per frame
+        // (This section is all correct)
         if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
-            if (player.y < GRID_HEIGHT - 1) player.y++; // Move up if not at the top edge
-        }
+            if (player.y < GRID_HEIGHT - 1) player.y++; }
         if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
-            if (player.y > 0) player.y--; // Move down if not at the bottom edge
-        }
+            if (player.y > 0) player.y--; }
         if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
-            if (player.x > 0) player.x--; // Move left if not at the left edge
-        }
+            if (player.x > 0) player.x--; }
         if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
-            if (player.x < GRID_WIDTH - 1) player.x++; // Move right if not at the right edge
-        }
-
-//        if(Gdx.input.isKeyJustPressed(Input.Keys.P)){
-//            //Let's plant a vine seed!
-//            //First we need to check the tile is occupied already
-//            boolean tileOccupied = false;
-//            for (Plant plant : plants){
-//                if(plant.x == player.x && plant.y == player.y){
-//                    tileOccupied = true;
-//                    break;
-//                }
-//            }
-//
-//            //If the tile is not occupied,plant a new one
-//            //for now always the plan is created at player's x,y coordinators
-//            if(!tileOccupied){
-//                //using the factory method
-//                Plant newPlant = PlantFactory.createPlant("Vine",player.x, player.y);
-//                if (newPlant !=null){
-//                    plants.add(newPlant);
-//                }
-//            }
-//        }
-
-        //Combine items with 'C'
+            if (player.x < GRID_WIDTH - 1) player.x++; }
         if (Gdx.input.isKeyJustPressed(COMBINE_KEY)){
-            Grimoire.combine(inventorySeeds,inventoryEssences);
-        }
-/// /*******
-//plant a Vine with "P"
+            Grimoire.combine(inventorySeeds,inventoryEssences); }
         if(Gdx.input.isKeyJustPressed(Input.Keys.P)){
             if(!isTileOccupied(player.x, player.y) && !inventorySeeds.isEmpty()){
-                //plants.add(PlantFactory.createPlant("Vine",player.x, player.y));
                 String seedToPlant = inventorySeeds.get(0);
                 Plant newPlant = PlantFactory.createPlant(seedToPlant,player.x,player.y);
                 if (newPlant != null){
-                    plants.add(newPlant);
-                    //inventorySeeds.remove(0);//optional
-
-                }
+                    plants.add(newPlant); }
             }
         }
-/// *************
         if(Gdx.input.isKeyJustPressed(BOMB_KEY)){
             if(!isTileOccupied(player.x, player.y)){
                 plants.add(PlantFactory.createPlant("Bomb", player.x, player.y));
             }
         }
 
-
-
-
-
-        //update all plants
-//        for (Plant plant:plants){
-//            plant.grow();
-//        }
-
+        // --- GAME LOGIC UPDATES ---
+        // (This section is also correct)
         ArrayList<Plant> plantsToRemove = new ArrayList<>();
-
         for (Plant plant:plants){
             plant.grow();
-            //check if a Bomb plant has just matured
             if (plant instanceof BombPlant && plant.isMature() && !((BombPlant)plant).hasExploded()){
-                ((BombPlant)plant).explode((walls));
-                plantsToRemove.add(plant);//marking the bomb fot the removal
+                ((BombPlant)plant).explode(walls); plantsToRemove.add(plant);
             }
         }
-        //remove all plants that exploded
         plants.removeAll(plantsToRemove);
-//pick up logic
-        //check for esssense pickups
-
         for(int i = essencesInWorld.size()-1;i>=0;i--){
             Essence essence = essencesInWorld.get(i);
             if(essence.x == player.x && essence.y == player.y){
@@ -199,8 +151,6 @@ public class GameScreen implements Screen {
                 System.out.println("Pick up a "+essence.type+"!");
             }
         }
-
-        // check for HeartEssence pickups
         for(int i = heartEssenceInWorld.size()-1;i>=0;i--){
             Essence essence =heartEssenceInWorld.get(i);
             if(essence.x==player.x && essence.y==player.y){
@@ -209,22 +159,18 @@ public class GameScreen implements Screen {
                 System.out.println("You found a "+essence.type+"!");
             }
         }
-
-        //check for the win condition
-        //check if the player is on the tree's tile and has collected all essences
         if(player.x==heartseedTree.x && player.y == heartseedTree.y && inventoryHeartEssences.size() ==2){
             if(currentState == GameState.PLAYING){
                 System.out.println("The Heartseed Tree has been restored!");
                 heartseedTree.bloom();
                 currentState = GameState.WIN;
+                System.out.println("=================================");
+                System.out.println("   YOU DID NOT JUST TEND A GARDEN;   ");
+                System.out.println("     YOU GAVE IT BACK ITS HEART.     ");
+                System.out.println("              THANK YOU.              ");
+                System.out.println("=================================");
             }
         }
-
-
-
-
-
-
 
         // --- RENDERING ---
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
@@ -233,64 +179,262 @@ public class GameScreen implements Screen {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-
-
-        //Draw the grid using grass tile
-        for (int x = 0; x < GRID_WIDTH; x++) {
-            for (int y = 0; y < GRID_HEIGHT; y++) {
-                //batch.setColor(0.2f, 0.3f, 0.2f, 1); // Dark green
-                batch.draw(tileTexture,x*TILE_SIZE,y*TILE_SIZE);
-            }
-        }
-
-
-        //Draw the cracked walls using texture
-        //batch.setColor(0.5f,0.4f,0.3f,1);//Brownish color
-        for(CrackedWall wall:walls){
-            batch.draw(objectTexture,wall.x*TILE_SIZE,wall.y*TILE_SIZE);
-        }
-
-        //Draw Essence in the world
-        //batch.setColor(1,1,0,0.7f);//glowing yellow
-        for(Essence essence:essencesInWorld){
-            batch.draw(sunEssencesTexture,essence.x*TILE_SIZE,essence.y*TILE_SIZE);
-        }
-        //draw plants,we will use colored rects for now,but we can change this later
-        for(Plant plant : plants){
-            if (plant instanceof BombPlant){
-                batch.setColor(0.8f,0.1f,0.1f,1);
-                batch.draw(whitePixel,plant.x*TILE_SIZE,plant.y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
-                batch.setColor(1,1,1,1);//reset color
-            }
-            else if (plant instanceof SunKissedVinePlant){
-                batch.setColor(1,0.9f,0.2f,1);//Golden yellow
-                batch.draw(whitePixel,plant.x*TILE_SIZE,plant.y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
-                batch.setColor(1,1,1,1);//reset color
+        if(currentState == GameState.PLAYING) {
+            //Draw the grid using grass tile
+            for (int x = 0; x < GRID_WIDTH; x++) {
+                for (int y = 0; y < GRID_HEIGHT; y++) {
+                    batch.draw(tileTexture, x * TILE_SIZE, y * TILE_SIZE);
+                }
             }
 
-            else if(plant.isMature()){
-                //let's draw a mature vine as a larger,bright green square
-                batch.setColor(0.1f,0.8f,0.2f,1);
-                batch.draw( whitePixel,plant.x * TILE_SIZE, plant.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                batch.setColor(1,1,1,1);//reset color
+            //Draw the cracked walls using texture
+            for (CrackedWall wall : walls) {
+                batch.draw(objectTexture, wall.x * TILE_SIZE, wall.y * TILE_SIZE);
+            }
+
+            //Draw Sun Essences in the world
+            for (Essence essence : essencesInWorld) {
+                batch.draw(sunEssencesTexture, essence.x * TILE_SIZE, essence.y * TILE_SIZE);
+            }
+
+            // Draw Heart Essences ---
+            for(Essence essence : heartEssenceInWorld) {
+                batch.setColor(0.8f, 0.2f, 0.8f, 1); // A magenta color to distinguish it
+                batch.draw(sunEssencesTexture, essence.x * TILE_SIZE, essence.y * TILE_SIZE);
+                batch.setColor(1, 1, 1, 1); // Reset color
+            }
+
+            //draw plants
+            for (Plant plant : plants) {
+                if (plant instanceof BombPlant) {
+                    batch.setColor(0.8f, 0.1f, 0.1f, 1);
+                    batch.draw(whitePixel, plant.x * TILE_SIZE, plant.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    batch.setColor(1, 1, 1, 1);
+                } else if (plant instanceof SunKissedVinePlant) {
+                    batch.setColor(1, 0.9f, 0.2f, 1);
+                    batch.draw(whitePixel, plant.x * TILE_SIZE, plant.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    batch.setColor(1, 1, 1, 1);
+                } else if (plant.isMature()) {
+                    batch.setColor(0.1f, 0.8f, 0.2f, 1);
+                    batch.draw(whitePixel, plant.x * TILE_SIZE, plant.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    batch.setColor(1, 1, 1, 1);
+                } else {
+                    batch.setColor(0.4f, 0.3f, 0.2f, 1);
+                    int offset = TILE_SIZE / 4;
+                    batch.draw(whitePixel, plant.x * TILE_SIZE + offset, plant.y * TILE_SIZE + offset, TILE_SIZE / 2, TILE_SIZE / 2);
+                    batch.setColor(1, 1, 1, 1);
+                }
+            }
+
+            //  Draw the Heartseed Tree ---
+            if (heartseedTree.isBloomed()) {
+                batch.setColor(0.2f, 1, 0.5f, 1); // A vibrant green
             } else {
-                // Draw an immature plant as a small, brown square
-                batch.setColor(0.4f, 0.3f, 0.2f, 1);
-                // We can make it smaller by drawing it with an offset and a smaller size
-                int offset = TILE_SIZE / 4;
-                batch.draw(whitePixel,plant.x * TILE_SIZE + offset, plant.y * TILE_SIZE + offset, TILE_SIZE / 2, TILE_SIZE / 2);
-                batch.setColor(1,1,1,1);//reset color
+                batch.setColor(0.4f, 0.4f, 0.4f, 1); // A grey, petrified color
             }
+            batch.draw(whitePixel, heartseedTree.x * TILE_SIZE, heartseedTree.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            batch.setColor(1, 1, 1, 1); // Reset color
+
+            //draw the player
+            batch.draw(characterTexture, player.x * TILE_SIZE, player.y * TILE_SIZE - 16);
         }
-
-
-        //draw the player
-        batch.draw(characterTexture,player.x*TILE_SIZE,player.y*TILE_SIZE-16);
-
-        // Draw the player
+        // Draw the win screen
+        else if (currentState == GameState.WIN) {
+            batch.setColor(0,0,0,0.7f);//semi transparent black background
+            batch.draw(whitePixel,0,0,GRID_WIDTH*TILE_SIZE,GRID_HEIGHT*TILE_SIZE);
+        }
 
         batch.end();
     }
+
+
+//    public void render(float delta) {
+//        // --- INPUT HANDLING ---
+//        // We check for keys being pressed just once per frame
+//        if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
+//            if (player.y < GRID_HEIGHT - 1) player.y++; // Move up if not at the top edge
+//        }
+//        if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
+//            if (player.y > 0) player.y--; // Move down if not at the bottom edge
+//        }
+//        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
+//            if (player.x > 0) player.x--; // Move left if not at the left edge
+//        }
+//        if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
+//            if (player.x < GRID_WIDTH - 1) player.x++; // Move right if not at the right edge
+//        }
+//
+////        if(Gdx.input.isKeyJustPressed(Input.Keys.P)){
+////            //Let's plant a vine seed!
+////            //First we need to check the tile is occupied already
+////            boolean tileOccupied = false;
+////            for (Plant plant : plants){
+////                if(plant.x == player.x && plant.y == player.y){
+////                    tileOccupied = true;
+////                    break;
+////                }
+////            }
+////
+////            //If the tile is not occupied,plant a new one
+////            //for now always the plan is created at player's x,y coordinators
+////            if(!tileOccupied){
+////                //using the factory method
+////                Plant newPlant = PlantFactory.createPlant("Vine",player.x, player.y);
+////                if (newPlant !=null){
+////                    plants.add(newPlant);
+////                }
+////            }
+////        }
+//
+//        //Combine items with 'C'
+//        if (Gdx.input.isKeyJustPressed(COMBINE_KEY)){
+//            Grimoire.combine(inventorySeeds,inventoryEssences);
+//        }
+///// /*******
+////plant a Vine with "P"
+//        if(Gdx.input.isKeyJustPressed(Input.Keys.P)){
+//            if(!isTileOccupied(player.x, player.y) && !inventorySeeds.isEmpty()){
+//                //plants.add(PlantFactory.createPlant("Vine",player.x, player.y));
+//                String seedToPlant = inventorySeeds.get(0);
+//                Plant newPlant = PlantFactory.createPlant(seedToPlant,player.x,player.y);
+//                if (newPlant != null){
+//                    plants.add(newPlant);
+//                    //inventorySeeds.remove(0);//optional
+//
+//                }
+//            }
+//        }
+///// *************
+//        if(Gdx.input.isKeyJustPressed(BOMB_KEY)){
+//            if(!isTileOccupied(player.x, player.y)){
+//                plants.add(PlantFactory.createPlant("Bomb", player.x, player.y));
+//            }
+//        }
+//
+//
+//
+//
+//
+//        //update all plants
+////        for (Plant plant:plants){
+////            plant.grow();
+////        }
+//
+//        ArrayList<Plant> plantsToRemove = new ArrayList<>();
+//
+//        for (Plant plant:plants){
+//            plant.grow();
+//            //check if a Bomb plant has just matured
+//            if (plant instanceof BombPlant && plant.isMature() && !((BombPlant)plant).hasExploded()){
+//                ((BombPlant)plant).explode((walls));
+//                plantsToRemove.add(plant);//marking the bomb fot the removal
+//            }
+//        }
+//        //remove all plants that exploded
+//        plants.removeAll(plantsToRemove);
+    ////pick up logic
+//        //check for esssense pickups
+//
+//        for(int i = essencesInWorld.size()-1;i>=0;i--){
+//            Essence essence = essencesInWorld.get(i);
+//            if(essence.x == player.x && essence.y == player.y){
+//                inventoryEssences.add(essence.type);
+//                essencesInWorld.remove(i);
+//                System.out.println("Pick up a "+essence.type+"!");
+//            }
+//        }
+//
+//        // check for HeartEssence pickups
+//        for(int i = heartEssenceInWorld.size()-1;i>=0;i--){
+//            Essence essence =heartEssenceInWorld.get(i);
+//            if(essence.x==player.x && essence.y==player.y){
+//                inventoryHeartEssences.add(essence.type);
+//                heartEssenceInWorld.remove(i);
+//                System.out.println("You found a "+essence.type+"!");
+//            }
+//        }
+//
+//        //check for the win condition
+//        //check if the player is on the tree's tile and has collected all essences
+//        if(player.x==heartseedTree.x && player.y == heartseedTree.y && inventoryHeartEssences.size() ==2){
+//            if(currentState == GameState.PLAYING){
+//                System.out.println("The Heartseed Tree has been restored!");
+//                heartseedTree.bloom();
+//                currentState = GameState.WIN;
+//            }
+//        }
+//
+//
+//
+//
+//
+//
+//
+//        // --- RENDERING ---
+//        Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
+//        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+//
+//        batch.setProjectionMatrix(camera.combined);
+//        batch.begin();
+//
+//
+//
+//        //Draw the grid using grass tile
+//        for (int x = 0; x < GRID_WIDTH; x++) {
+//            for (int y = 0; y < GRID_HEIGHT; y++) {
+//                //batch.setColor(0.2f, 0.3f, 0.2f, 1); // Dark green
+//                batch.draw(tileTexture,x*TILE_SIZE,y*TILE_SIZE);
+//            }
+//        }
+//
+//
+//        //Draw the cracked walls using texture
+//        //batch.setColor(0.5f,0.4f,0.3f,1);//Brownish color
+//        for(CrackedWall wall:walls){
+//            batch.draw(objectTexture,wall.x*TILE_SIZE,wall.y*TILE_SIZE);
+//        }
+//
+//        //Draw Essence in the world
+//        //batch.setColor(1,1,0,0.7f);//glowing yellow
+//        for(Essence essence:essencesInWorld){
+//            batch.draw(sunEssencesTexture,essence.x*TILE_SIZE,essence.y*TILE_SIZE);
+//        }
+//        //draw plants,we will use colored rects for now,but we can change this later
+//        for(Plant plant : plants){
+//            if (plant instanceof BombPlant){
+//                batch.setColor(0.8f,0.1f,0.1f,1);
+//                batch.draw(whitePixel,plant.x*TILE_SIZE,plant.y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
+//                batch.setColor(1,1,1,1);//reset color
+//            }
+//            else if (plant instanceof SunKissedVinePlant){
+//                batch.setColor(1,0.9f,0.2f,1);//Golden yellow
+//                batch.draw(whitePixel,plant.x*TILE_SIZE,plant.y*TILE_SIZE,TILE_SIZE,TILE_SIZE);
+//                batch.setColor(1,1,1,1);//reset color
+//            }
+//
+//            else if(plant.isMature()){
+//                //let's draw a mature vine as a larger,bright green square
+//                batch.setColor(0.1f,0.8f,0.2f,1);
+//                batch.draw( whitePixel,plant.x * TILE_SIZE, plant.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+//                batch.setColor(1,1,1,1);//reset color
+//            } else {
+//                // Draw an immature plant as a small, brown square
+//                batch.setColor(0.4f, 0.3f, 0.2f, 1);
+//                // We can make it smaller by drawing it with an offset and a smaller size
+//                int offset = TILE_SIZE / 4;
+//                batch.draw(whitePixel,plant.x * TILE_SIZE + offset, plant.y * TILE_SIZE + offset, TILE_SIZE / 2, TILE_SIZE / 2);
+//                batch.setColor(1,1,1,1);//reset color
+//            }
+//        }
+//
+//
+//        //draw the player
+//        batch.draw(characterTexture,player.x*TILE_SIZE,player.y*TILE_SIZE-16);
+//
+//        // Draw the player
+//
+//        batch.end();
+//    }
     private boolean isTileOccupied(int x,int y){
         for (Plant plant:plants){
             if (plant.x == x && plant.y ==y){
@@ -328,3 +472,5 @@ public class GameScreen implements Screen {
         batch.dispose();
     }
 }
+
+//is there something wrong the code?bcs when we picked all the esssence seems like it generates that msg infinitely
